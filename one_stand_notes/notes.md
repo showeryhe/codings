@@ -38,3 +38,8 @@ int main(void)
   }
   return 0;
 }`
+
+## section 2
+[cite]{http://docs.linuxtone.org/ebooks/C&CPP/c/ch04s02.html}
+
+> C语言规定, `else`总是和它上面最近的一个`if`配对.
