@@ -25,21 +25,22 @@ $?是Shell中的一个特殊变量，表示上一个运行结束的程序的退�
 > 在数学中a<b<c表示b既大于a又小于c, 但作为C语言表达式却不是这样.
 > 以上几种运算符都是左结合的, 请读者想一下这个表达式表示什么?
 
-`#include <stdio.h>
+>`#include <stdio.h>`
 
-int main(void)
+`int main(void)`
 
-{
+`{`
 
-  int a = 1, b = 2, c = 1;
+`  int a = 1, b = 2, c = 1;`
 
-  if (a<b==c){
-      printf("%d<%d==%d is is true.\n", a, b, c);
+`  if (a<b==c){`
+`      printf("%d<%d==%d is is true.\n", a, b, c);`
+<code>
   }
   return 0;
-}`
+}</code>
 
 ## section 2
-[cite]{http://docs.linuxtone.org/ebooks/C&CPP/c/ch04s02.html}
+[cite](http://docs.linuxtone.org/ebooks/C&CPP/c/ch04s02.html)
 
 > C语言规定, `else`总是和它上面最近的一个`if`配对.
