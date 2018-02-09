@@ -44,3 +44,7 @@ $?是Shell中的一个特殊变量，表示上一个运行结束的程序的退�
 [cite](http://docs.linuxtone.org/ebooks/C&CPP/c/ch04s02.html)
 
 > C语言规定, `else`总是和它上面最近的一个`if`配对.
+
+## section 4
+[cite](http://docs.linuxtone.org/ebooks/C&CPP/c/ch04s04.html)
+> 进入case后如果没有遇到break语句就会一直往下执行，后面其它case或default下面的语句也会被执行到，直到遇到break，或者执行到整个switch语句块的末尾。
