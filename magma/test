@@ -1,0 +1,197 @@
+/* initialzation of the parameters */
+/* p:=2; n:=16; q:=4; k:=4; */
+p:=2; n:=4; q:=2; k:=2;
+Z:=Integers();
+
+/* the base fields */
+Fq<t>:=FiniteField(p, n div (2*k));
+Fq2<t>:=ext<Fq|2>;
+Fq2X<X>:=PolynomialRing(Fq2);
+
+/* initialization of the field */
+
+j:=0;
+while j eq 0 do
+	a:=Random(Fq2); b:=Random(Fq2); c:=Random(Fq2); d:=Random(Fq2); e:=Random(Fq2);
+	h0<X>:=Fq2X!a*X^2+b*X+c;
+	h1<X>:=Fq2X!X+e;
+	T:=Factorization(h1*X^q-h0);	
+	i:=0;
+	while i lt #T and j eq 0 do
+		i:=i+1;
+		if Degree(T[i][1]) eq k then
+			Ik<X>:=T[i][1];
+			j:=j+1;
+		end if;
+	end while;
+end while;
+
+gen:=rep{X+a: a in Fq2|IsPrimitive(ext<Fq2|Ik>!X+a)};
+
+Fq2int:=function(x)
+	z:=[Integers()!y: y in Eltseq(x)];
+	return Seqint(z, p);
+end function;
+
+Fq2Xint:=function(f)
+	return Seqint([Fq2int(x): x in Coefficients(Fq2X!(f mod Ik))], q^2);
+end function;
+
+LOG:=Matrix(Integers(), p^n, 2, []);
+
+/* Initialization of consts in Fq2 */
+d:=(p^n-1) div (q^2-1);
+beta:=Fq2X!(gen^d mod Ik);
+for i in [1..q^2-1] do
+	LOG[Fq2Xint(beta^i), 1]:=i*d;
+end for;
+
+/* the initialization of M */
+RepreCheck:=function(m0, M)
+	for m in M do
+		tmp:=m0*(m^-1);
+		if tmp[1,1] ne 0 then
+			tmp:=tmp*(Fq2!tmp[1, 1]^-1);
+		else
+			tmp:=tmp*(Fq2!tmp[1, 2]^-1);
+		end if;
+		if tmp[1, 1] in Fq and tmp[1, 2] in Fq and tmp[2, 1] in Fq and tmp[2, 2] in Fq then
+			return M;
+		end if;
+	end for;
+	return Append(M, m0);
+end function;
+
+/* the initialization of M */
+g:=Fq2.1;
+M:=[* *];
+/* TYPE I */
+for x in Fq2 do
+	for y in Fq2 do
+		if (not x in Fq) and (not y in Fq) and (x*y ne 1) then
+				M:=RepreCheck(Matrix(Fq2, 2, 2, [1, x, y, 1]), M);
+		end if;
+	end for;
+end for;
+
+for x in Fq do
+	M:=RepreCheck(Matrix(Fq2, 2, 2, [0, 1, g, x*g]), M);
+	M:=RepreCheck(Matrix(Fq2, 2, 2, [1, 0, x*g, g]), M);
+	for y in Fq do			
+			M:=RepreCheck(Matrix(Fq2, 2, 2, [0, 1, 1+x*g, y*g]), M);
+			M:=RepreCheck(Matrix(Fq2, 2, 2, [1, 0, x*g, 1+y*g]), M);
+			/* TYPE II */
+			if x ne 0 and y ne 0 and x ne y then
+				M:=RepreCheck(Matrix(Fq2, 2, 2, [1, x, g, y*g]), M);
+			end if;
+	end for;
+end for;
+
+MC:=Matrix(Fq2, #M, 1, []);
+/* Initilization of H */
+H:=Matrix(Z, #M, q^2+1, []); // The last column is used to compute
+i:=0;
+while i lt #M do
+	i:=i+1;
+	m:=M[i];
+	/* dealing with (x:1) in PG(1, q) */
+	for x in Fq do
+		if -m[2,1]*x+m[1,1] ne 0 then
+			tmp:=-(m[2,2]*x-m[1,2])/(-m[2,1]*x+m[1,1]);
+			H[i,Fq2int(tmp)+1]:=1;
+			MC[i,1]:=-m[2,1]*x+m[1,1];
+		else
+			H[i, q^2+1]:=1;
+			MC[i,1]:=-(m[2,2]*x-m[1,2]);
+		end if;
+	end for;
+	/* the (1:0) in PG(1, q) */
+	if m[2,1] ne 0 then
+		tmp:=m[2,2]/m[2,1];
+		H[i,Fq2int(tmp)+1]:=1;
+		MC[i,1]:=-m[2,1];
+	else
+		H[i, q^2+1]:=1;
+		MC[i,1]:=-m[2,2];
+	end if;
+end while;
+
+/* construction of system of equation
+ * in order to get the Log of linear polynomials
+ */
+ 
+C:=Matrix(Integers(p^n-1), q^2+1, q^2, [<1, Fq2Xint(h1-X)+1, 1>]);	// the matrix of coefficients
+const:=Matrix(Integers(p^n-1), q^2+1, 1, [<1,1,1>]);
+// column matrix of logarithm of constants Log(Fq2k, elt in Fq2)
+
+i:=0;	// to go through all m's
+r:=1;	// the mark of rank
+
+while r lt q^2+1 and i lt #M do
+//while i lt #M do
+	i:=i+1;
+	v:=Matrix(Integers(p^n-1), 1, q^2, [<1, Fq2Xint(h1-X)+1, -1>]);
+	m:=M[i]; a:=m[1,1]; b:=m[1,2]; c:=m[2,1]; d:=m[2,2];
+	N:=(a^q*h0+b^q*h1)*(c*X+d)-(a*X+b)*(c^q*h0+d^q*h1); 
+		// for convenience to be defined as function
+	F:=Factorization(N);
+	j:=0;
+	while j lt #F do
+		j:=j+1;
+		if Degree(F[j][1]) eq 1 then
+			v[1, Fq2Xint(F[j][1]-X)+1]+:=F[j][2];
+		else
+			j:=#F+1; // no linear factorization then return
+		end if;
+	end while;
+	if j eq #F then // found linear factorization, then check for the linear independer i in [1..q^2+1] do // Sparse Matrix
+		for tmp in [1..q^2] do	
+			C[r+1, tmp]:=v[1, tmp]-H[i,tmp];
+		end for;
+		if Rank(C) eq r /*or (Rank(C) eq q^2 and not IsInvertible(Determinant(C)))*/ then
+			for tmp in [1..q^2] do
+				C[r+1, tmp]:=0;
+			end for;
+		else
+			r:=r+1;
+			const[r,1]:=-LOG[Fq2int(LeadingCoefficient(N)), 1]+LOG[Fq2int(MC[i, 1]), 1]/*+LOG[Fq2int(LeadingCoefficient(h1)),1]*/;
+		end if;
+	end if;
+end while;
+
+linear:=Solution(Transpose(C), Transpose(const));
+print linear;
+
+/*
+Fq2k<X>:=ext<Fq2|Ik>;
+for tmp in Fq2 do
+	X+tmp;
+	Log(Fq2k!gen, Fq2k!(X+tmp));
+end for;
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
