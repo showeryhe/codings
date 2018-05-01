@@ -163,9 +163,8 @@ end while;
 linear:=ModularSolution(C, p^n-1);
 print linear;
 
-Gaussian:=function(C, const)
+Gaussian:=function(C)
 	Ctmp:=C;
-	ctmp:=const;
 	i:=0;
 	while i lt NumberOfColumns(C)-1 do
 		i:=i+1;
@@ -183,24 +182,18 @@ Gaussian:=function(C, const)
 			i:=NumberOfColumns(C)+1;
 		else
 			SwapRows(~Ctmp, i, k);
-			SwapRows(~ctmp, i, k);
-			print "to eliminate";
-			print Ctmp;
-			print "====";			
 			P:=Ctmp[i, i];
 			for tmp in [i+1..NumberOfRows(C)] do
 				c:=Ctmp[tmp, i];
 				if c ne 0 and IsUnit(P) then
 					Ctmp[tmp]:=Ctmp[tmp] - c*(P^(-1))*Ctmp[i];
-					ctmp[tmp,1]:=ctmp[tmp,1] - c*(P^-1)*ctmp[i,1];
 				elif c ne 0 then
 					Ctmp[tmp]:=P*Ctmp[tmp] - c*Ctmp[i];
-					ctmp[tmp,1]:=P*ctmp[tmp,1] - c*ctmp[i,1];
 				end if;
 			end for;
 		end if;
 	end while;
-	return Ctmp, ctmp;
+	return Ctmp;
 end function;
 /*
 Fq2k<X>:=ext<Fq2|Ik>;

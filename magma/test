@@ -120,16 +120,13 @@ end while;
  * in order to get the Log of linear polynomials
  */
  
-C:=Matrix(Integers(p^n-1), q^2+1, q^2, [<1, Fq2Xint(h1-X)+1, 1>]);	// the matrix of coefficients
-const:=Matrix(Integers(p^n-1), q^2+1, 1, [<1,1,1>]);
+C:=Matrix(Integers(p^n-1), #M+1, q^2, [<#M+1, Fq2Xint(gen-X)+1, 1>]);	// the matrix of coefficients
+const:=Matrix(Integers(p^n-1), #M+1, 1, [<#M+1,1,1>]);
 // column matrix of logarithm of constants Log(Fq2k, elt in Fq2)
 
-i:=0;	// to go through all m's
 r:=1;	// the mark of rank
 
-while r lt q^2+1 and i lt #M do
-//while i lt #M do
-	i:=i+1;
+for i in [1..#M] do// go through every m
 	v:=Matrix(Integers(p^n-1), 1, q^2, [<1, Fq2Xint(h1-X)+1, -1>]);
 	m:=M[i]; a:=m[1,1]; b:=m[1,2]; c:=m[2,1]; d:=m[2,2];
 	N:=(a^q*h0+b^q*h1)*(c*X+d)-(a*X+b)*(c^q*h0+d^q*h1); 
@@ -144,23 +141,57 @@ while r lt q^2+1 and i lt #M do
 			j:=#F+1; // no linear factorization then return
 		end if;
 	end while;
-	if j eq #F then // found linear factorization, then check for the linear independer i in [1..q^2+1] do // Sparse Matrix
-		for tmp in [1..q^2] do	
-			C[r+1, tmp]:=v[1, tmp]-H[i,tmp];
+	if j eq #F then // found linear factorization
+		r+:=1;
+		for tmp in [1..q^2] do
+			C[r, tmp]:=v[1, tmp]-H[i,tmp];
 		end for;
-		if Rank(C) eq r /*or (Rank(C) eq q^2 and not IsInvertible(Determinant(C)))*/ then
-			for tmp in [1..q^2] do
-				C[r+1, tmp]:=0;
-			end for;
-		else
-			r:=r+1;
-			const[r,1]:=-LOG[Fq2int(LeadingCoefficient(N)), 1]+LOG[Fq2int(MC[i, 1]), 1]/*+LOG[Fq2int(LeadingCoefficient(h1)),1]*/;
-		end if;
+		const[r,1]:=-(LOG[Fq2int(LeadingCoefficient(N)), 1]-LOG[Fq2int(MC[i, 1]), 1]-LOG[Fq2int(LeadingCoefficient(h1)),1]);
 	end if;
-end while;
+end for;
 
 linear:=Solution(Transpose(C), Transpose(const));
 print linear;
+
+Gaussian:=function(C, const)
+	Ctmp:=C;
+	ctmp:=const;
+	i:=0;
+	while i lt NumberOfColumns(C)-1 do
+		i:=i+1;
+		j:=i-1;
+		while j lt NumberOfColumns(C) do
+			j:=j+1;
+			P:=Ctmp[j, i];
+			if P ne 0 then
+				k:=j;
+				j:=NumberOfColumns(C);
+			end if;
+		end while;
+		if P eq 0 then
+			print "non-invertible";
+			i:=NumberOfColumns(C)+1;
+		else
+			SwapRows(~Ctmp, i, k);
+			SwapRows(~ctmp, i, k);
+			print "to eliminate";
+			print Ctmp;
+			print "====";			
+			P:=Ctmp[i, i];
+			for tmp in [i+1..NumberOfRows(C)] do
+				c:=Ctmp[tmp, i];
+				if c ne 0 and IsUnit(P) then
+					Ctmp[tmp]:=Ctmp[tmp] - c*(P^(-1))*Ctmp[i];
+					ctmp[tmp,1]:=ctmp[tmp,1] - c*(P^-1)*ctmp[i,1];
+				elif c ne 0 then
+					Ctmp[tmp]:=P*Ctmp[tmp] - c*Ctmp[i];
+					ctmp[tmp,1]:=P*ctmp[tmp,1] - c*ctmp[i,1];
+				end if;
+			end for;
+		end if;
+	end while;
+	return Ctmp, ctmp;
+end function;
 
 /*
 Fq2k<X>:=ext<Fq2|Ik>;

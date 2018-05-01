@@ -1,3 +1,4 @@
+/* successful */
 /* initialzation of the parameters */
 p:=2;
 n:=4;
@@ -13,9 +14,9 @@ Fq2<t>:=ext<Fq|Fqt!(t^2+t+1)>;
 Fq2X<X>:=PolynomialRing(Fq2);
 
 /* initialization of the field */
-h0:=Fq2X!(t^2*X);
-h1:=Fq2X!(X+1);
-Ik:=Fq2X!(X^2+X+t^2);                 
+h0:=Fq2X!(X^2+t^2*X+1);
+h1:=Fq2X!(X+t);
+Ik:=Fq2X!(X^2+t*X+1);                 
 
 gen:=Fq2X!(X+1);
 
@@ -88,8 +89,8 @@ while i lt #M do
 	/* dealing with (x:1) in PG(1, q) */
 	for x in Fq do
 		if -m[2,1]*x+m[1,1] ne 0 then
-			t:=-(m[2,2]*x-m[1,2])/(-m[2,1]*x+m[1,1]);
-			H[i,Fq2int(t)+1]:=1;
+			tmp:=-(m[2,2]*x-m[1,2])/(-m[2,1]*x+m[1,1]);
+			H[i,Fq2int(tmp)+1]:=1;
 			MC[i,1]:=MC[i,1]*(-m[2,1]*x+m[1,1]);
 		else
 			H[i, q^2+1]:=1;
@@ -111,14 +112,14 @@ end while;
  * in order to get the Log of linear polynomials
  */
  
-C:=Matrix(Integers(p^n-1), q^2+1, q^2, [<1, Fq2Xint(h1-X)+1, 1>]);	// the matrix of coefficients
-const:=Matrix(Integers(p^n-1), q^2+1, 1, [<1,1,1>]);
+C:=Matrix(Integers(p^n-1), #M, q^2, [<1, Fq2Xint(gen-X)+1, 1>]);	// the matrix of coefficients
+const:=Matrix(Integers(p^n-1), #M, 1, [<1,1,1>]);
 // column matrix of logarithm of constants Log(Fq2k, elt in Fq2)
 
+r:=1; // denote the row of C
 i:=0;	// to go through all m's
-r:=1;	// the mark of rank
 
-while r lt q^2+1 and i lt #M do
+while i lt #M do
 //while i lt #M do
 	i:=i+1;
 	v:=Matrix(Integers(p^n-1), 1, q^2, [<1, Fq2Xint(h1-X)+1, -1>]);
@@ -136,17 +137,11 @@ while r lt q^2+1 and i lt #M do
 		end if;
 	end while;
 	if j eq #F then // found linear factorization, then check for the linear independer i in [1..q^2+1] do // Sparse Matrix
+		r+:=1;
 		for tmp in [1..q^2] do	
-			C[r+1, tmp]:=v[1, tmp]-H[i,tmp];
+			C[r, tmp]:=v[1, tmp]-H[i,tmp];
 		end for;
-		if Rank(C) eq r /*or (Rank(C) eq q^2+1 and not IsInvertible(Determinant(C))) */then
-			for tmp in [1..q^2] do
-				C[r+1, tmp]:=0;
-			end for;
-		else
-			r:=r+1;
-			const[r,1]:=-(LOG[Fq2int(LeadingCoefficient(N)), 1]-LOG[Fq2int(MC[i, 1]), 1]-LOG[Fq2int(LeadingCoefficient(h1)),1]);
-		end if;
+		const[r,1]:=-(LOG[Fq2int(LeadingCoefficient(N)), 1]-LOG[Fq2int(MC[i, 1]), 1]-LOG[Fq2int(LeadingCoefficient(h1)),1]);
 	end if;
 end while;
 

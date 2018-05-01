@@ -15,8 +15,7 @@ Fq2X<X>:=PolynomialRing(Fq2);
 /* initialization of the field */
 h0:=Fq2X!(t^2*X);
 h1:=Fq2X!(X+1);
-Ik:=Fq2X!(X^2+X+t^2);                 
-
+Ik:=Fq2X!(X^2+X+t^2);          
 gen:=Fq2X!(X+1);
 
 Fq2int:=function(x)
@@ -41,9 +40,9 @@ RepreCheck:=function(m0, M)
 	for m in M do
 		tmp:=m0*(m^-1);
 		if tmp[1,1] ne 0 then
-			tmp:=tmp*(Fq2!tmp[1, 1]^-1);
+			tmp*:=Fq2!tmp[1, 1]^-1;
 		else
-			tmp:=tmp*(Fq2!tmp[1, 2]^-1);
+			tmp*:=Fq2!tmp[1, 2]^-1;
 		end if;
 		if tmp[1, 1] in Fq and tmp[1, 2] in Fq and tmp[2, 1] in Fq and tmp[2, 2] in Fq then
 			return M;
@@ -111,7 +110,7 @@ end while;
  * in order to get the Log of linear polynomials
  */
  
-C:=Matrix(Integers(p^n-1), q^2+1, q^2, [<1, Fq2Xint(h1-X)+1, 1>]);	// the matrix of coefficients
+C:=Matrix(Integers(p^n-1), q^2+1, q^2, [<1, Fq2Xint(gen-X)+1, 1>]);	// the matrix of coefficients
 const:=Matrix(Integers(p^n-1), q^2+1, 1, [<1,1,1>]);
 // column matrix of logarithm of constants Log(Fq2k, elt in Fq2)
 
